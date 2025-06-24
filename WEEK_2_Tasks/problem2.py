@@ -44,3 +44,23 @@ classifier=LogisticRegression(multi_class='multinomial', max_iter=1000)
 classifier.fit(x_train, y_train)
 
 predictions=classifier.predict(x_test)
+
+def predict_tweet_sentiment(model, w2v_model, tweet):
+    text=str(tweet).lower()
+    text=re.sub(r'http\S+|www\S+|@\w+|#\w+','',text)
+    text=fix(text)
+    text=re.sub(r'[^a-z\s]','',text)
+    tokens=[lemmatizer.lemmatize(word) for word in word_tokenize(text) if word not in stop_words]
+
+    vectors=[w2v_model[word] for word in tokens if word in w2v_model]
+    if vectors:
+        tweet_vector=np.mean(vectors, axis=0)
+    else:
+        tweet_vector=np.zeros(300)
+        
+    tweet_vector=tweet_vector.reshape(1,-1)
+
+    prediction=model.predict(tweet)[0]
+    sentiment_map= {0:'negative', 1:'neutral', 2:'positive'}
+
+    return sentiment_map[prediction]
